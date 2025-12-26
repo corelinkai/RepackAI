@@ -1,7 +1,8 @@
 'use client';
 
 import { AppraisalResult } from '@/types';
-import { TrendingUp, TrendingDown, Minus, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, CheckCircle, Image as ImageIcon, Award, BarChart3 } from 'lucide-react';
+import MarketComparison from './MarketComparison';
 
 interface AppraisalResultProps {
   result: AppraisalResult;
@@ -49,26 +50,73 @@ export default function AppraisalResultComponent({ result, onNewAppraisal }: App
   const aiConditionScore = conditionScores[result.item.condition];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       {/* AI Analysis Header */}
-      <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-sm opacity-90">AI-Powered Appraisal</p>
-            <h2 className="text-3xl font-bold mt-1">
-              {formatCurrency(result.estimatedPrice)}
-            </h2>
+      <div className="gradient-luxury text-white rounded-xl p-8 shadow-luxury-lg relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gold-400 opacity-5 rounded-full -mr-32 -mt-32"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white opacity-5 rounded-full -ml-24 -mb-24"></div>
+
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-6">
+            <Award className="w-6 h-6 text-gold-400" />
+            <span className="text-sm font-medium text-gold-200">AI-Powered Appraisal</span>
           </div>
-          <div className="text-right">
-            <p className="text-sm opacity-90">Confidence Score</p>
-            <p className="text-2xl font-bold">{result.confidence}%</p>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div>
+              <p className="text-sm opacity-75 mb-2">Estimated Resale Value</p>
+              <h2 className="text-5xl font-serif font-bold mb-3">
+                {formatCurrency(result.estimatedPrice)}
+              </h2>
+              {result.priceRange && (
+                <div className="flex items-center gap-2 text-sm bg-white/10 backdrop-blur px-3 py-1.5 rounded-full inline-flex">
+                  <BarChart3 className="w-4 h-4" />
+                  <span>Range: {formatCurrency(result.priceRange.min)} - {formatCurrency(result.priceRange.max)}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end">
+              <div className="text-center bg-white/10 backdrop-blur rounded-xl p-6 min-w-[160px]">
+                <p className="text-sm opacity-75 mb-2">Confidence Score</p>
+                <div className="relative inline-flex items-center justify-center">
+                  <svg className="w-32 h-32 transform -rotate-90">
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="56"
+                      stroke="rgba(255,255,255,0.1)"
+                      strokeWidth="8"
+                      fill="none"
+                    />
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="56"
+                      stroke="#C9A961"
+                      strokeWidth="8"
+                      fill="none"
+                      strokeDasharray={`${result.confidence * 3.51} 351`}
+                      className="transition-all duration-1000"
+                    />
+                  </svg>
+                  <div className="absolute">
+                    <p className="text-4xl font-bold">{result.confidence}%</p>
+                  </div>
+                </div>
+                {result.confidence >= 90 && (
+                  <p className="text-xs text-gold-200 mt-2 font-medium">High Confidence</p>
+                )}
+                {result.confidence >= 70 && result.confidence < 90 && (
+                  <p className="text-xs text-blue-200 mt-2 font-medium">Good Confidence</p>
+                )}
+                {result.confidence < 70 && (
+                  <p className="text-xs text-orange-200 mt-2 font-medium">Review Recommended</p>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2 text-sm">
-          <span className="opacity-90">Price Range:</span>
-          <span className="font-semibold">
-            {formatCurrency(result.priceRange.min)} - {formatCurrency(result.priceRange.max)}
-          </span>
         </div>
       </div>
 
@@ -140,31 +188,35 @@ export default function AppraisalResultComponent({ result, onNewAppraisal }: App
       </div>
 
       {/* Price Factors */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold mb-4">Price Factors</h3>
-        <div className="space-y-3">
-          {result.factors.map((factor, index) => (
-            <div
-              key={index}
-              className={`flex items-center justify-between p-3 rounded-lg ${getImpactColor(factor.impact)}`}
-            >
-              <div className="flex items-center gap-3">
-                {getImpactIcon(factor.impact)}
-                <div>
-                  <p className="font-medium text-sm">{factor.name}</p>
-                  <p className="text-xs opacity-75">{factor.description}</p>
+      {(result.priceFactors || result.factors) && (
+        <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold mb-4">Price Factors</h3>
+          <div className="space-y-3">
+            {(result.priceFactors || result.factors || []).map((factor, index) => (
+              <div
+                key={index}
+                className={`flex items-center justify-between p-3 rounded-lg ${getImpactColor(factor.impact)}`}
+              >
+                <div className="flex items-center gap-3">
+                  {getImpactIcon(factor.impact)}
+                  <div>
+                    <p className="font-medium text-sm">{factor.factor || factor.name}</p>
+                    <p className="text-xs opacity-75">{factor.description}</p>
+                  </div>
                 </div>
+                {factor.adjustment !== undefined && (
+                  <div className="text-right">
+                    <span className="font-semibold">
+                      {factor.adjustment > 0 ? '+' : ''}
+                      {factor.adjustment.toFixed(0)}%
+                    </span>
+                  </div>
+                )}
               </div>
-              <div className="text-right">
-                <span className="font-semibold">
-                  {factor.adjustment > 0 ? '+' : ''}
-                  {factor.adjustment.toFixed(0)}%
-                </span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Images Preview */}
       {result.item.images.length > 0 && (
@@ -183,25 +235,28 @@ export default function AppraisalResultComponent({ result, onNewAppraisal }: App
         </div>
       )}
 
+      {/* Market Comparison - NEW FEATURE */}
+      <MarketComparison item={result.item} />
+
       {/* Actions */}
       {onNewAppraisal && (
         <div className="flex gap-3">
           <button
             onClick={onNewAppraisal}
-            className="flex-1 bg-primary-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-primary-700 transition-colors"
+            className="flex-1 gradient-luxury text-white py-3 px-6 rounded-lg font-medium hover:opacity-90 transition-all shadow-luxury hover-lift"
           >
             New Appraisal
           </button>
-          <button className="flex-1 border-2 border-primary-600 text-primary-600 py-3 px-6 rounded-lg font-medium hover:bg-primary-50 transition-colors">
+          <button className="flex-1 border-2 border-primary-500 text-primary-500 py-3 px-6 rounded-lg font-medium hover:bg-primary-50 transition-all shadow-luxury hover-lift">
             Save & Share
           </button>
         </div>
       )}
 
       {/* Note about Virtual Try-On */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          <strong>Coming Soon:</strong> Virtual Try-On powered by Google AI - Let buyers visualize how items look before purchasing
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-sm text-gray-700">
+          <strong className="text-gold-600">Coming Soon:</strong> Virtual Try-On powered by Google AI - Let buyers visualize how items look before purchasing
         </p>
       </div>
     </div>

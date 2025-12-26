@@ -28,17 +28,43 @@ export interface LuxuryItem {
 }
 
 export interface AppraisalResult {
-  id: string;
+  id?: string;
   item: LuxuryItem;
   estimatedPrice: number;
-  priceRange: {
+  priceRange?: {
     min: number;
     max: number;
   };
-  factors: AppraisalFactor[];
+  priceFactors?: PriceFactor[];
+  factors?: AppraisalFactor[];
   confidence: number;
-  createdAt: Date;
+  createdAt?: Date;
   userId?: string;
+  marketComparison?: MarketListing[];
+  aiAnalysis?: {
+    brand?: string;
+    model?: string;
+    category?: string;
+    condition?: string;
+    conditionScore?: number;
+    confidence?: number;
+    details?: string;
+  };
+}
+
+export interface PriceFactor {
+  factor: string;
+  impact: 'positive' | 'negative' | 'neutral';
+  description: string;
+}
+
+export interface MarketListing {
+  title: string;
+  price: string;
+  url: string;
+  source: string;
+  condition?: string;
+  imageUrl?: string;
 }
 
 export interface AppraisalFactor {

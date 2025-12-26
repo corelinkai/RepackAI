@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { LuxuryItem, ItemCondition, DesignTrend, DemandLevel } from '@/types';
 import { LUXURY_BRANDS, ITEM_CATEGORIES } from '@/data/luxury-brands';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Camera } from 'lucide-react';
+import CameraCapture from './CameraCapture';
 
 interface AppraisalFormProps {
   onSubmit: (item: LuxuryItem) => void;
@@ -26,10 +27,12 @@ export default function AppraisalForm({ onSubmit, isLoading }: AppraisalFormProp
   });
 
   const [imagePreview, setImagePreview] = useState<string[]>([]);
+  const [showCamera, setShowCamera] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.brand && formData.category && formData.originalPrice) {
+    // Allow submission with just images - AI will detect brand/category
+    if (formData.images && formData.images.length > 0) {
       onSubmit(formData as LuxuryItem);
     }
   };
@@ -58,39 +61,67 @@ export default function AppraisalForm({ onSubmit, isLoading }: AppraisalFormProp
     setFormData({ ...formData, images: newImages });
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Image Upload */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Item Images *
-        </label>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary-500 transition-colors">
-          <input
-            type="file"
-            id="images"
-            accept="image/*"
-            multiple
-            onChange={handleImageUpload}
-            className="hidden"
-          />
-          <label
-            htmlFor="images"
-            className="cursor-pointer flex flex-col items-center"
-          >
-            <Upload className="w-12 h-12 text-gray-400 mb-2" />
-            <span className="text-sm text-gray-600">
-              Click to upload or drag and drop
-            </span>
-            <span className="text-xs text-gray-500 mt-1">
-              PNG, JPG up to 10MB
-            </span>
-          </label>
-        </div>
+  const handleCameraCapture = (imageData: string) => {
+    setImagePreview([...imagePreview, imageData]);
+    setFormData({ ...formData, images: [...(formData.images || []), imageData] });
+  };
 
-        {/* Image Previews */}
-        {imagePreview.length > 0 && (
-          <div className="grid grid-cols-4 gap-4 mt-4">
+  return (
+    <>
+      {/* Camera Modal */}
+      {showCamera && (
+        <CameraCapture
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Image Upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Item Images *
+          </label>
+
+          {/* Upload options */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            {/* Camera button */}
+            <button
+              type="button"
+              onClick={() => setShowCamera(true)}
+              className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gold-400 hover:bg-gold-50 transition-all group"
+            >
+              <Camera className="w-10 h-10 text-gray-400 group-hover:text-gold-500 mx-auto mb-2" />
+              <span className="text-sm font-medium text-gray-600 group-hover:text-gold-600">
+                Take Photo
+              </span>
+            </button>
+
+            {/* File upload button */}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:border-gold-400 hover:bg-gold-50 transition-all group">
+              <input
+                type="file"
+                id="images"
+                accept="image/*"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+              <label
+                htmlFor="images"
+                className="cursor-pointer flex flex-col items-center"
+              >
+                <Upload className="w-10 h-10 text-gray-400 group-hover:text-gold-500 mb-2" />
+                <span className="text-sm font-medium text-gray-600 group-hover:text-gold-600">
+                  Upload Files
+                </span>
+              </label>
+            </div>
+          </div>
+
+          {/* Image Previews */}
+          {imagePreview.length > 0 && (
+            <div className="grid grid-cols-4 gap-4 mt-4">
             {imagePreview.map((img, index) => (
               <div key={index} className="relative group">
                 <img
@@ -107,23 +138,31 @@ export default function AppraisalForm({ onSubmit, isLoading }: AppraisalFormProp
                 </button>
               </div>
             ))}
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+
+          {/* AI Tip */}
+          {imagePreview.length > 0 && (
+            <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>💡 Tip:</strong> Our AI will automatically detect the brand, category, and condition from your photo. You can skip those fields or override them if needed.
+              </p>
+            </div>
+          )}
+        </div>
 
       {/* Brand */}
       <div>
         <label htmlFor="brand" className="block text-sm font-medium text-gray-700 mb-2">
-          Brand *
+          Brand <span className="text-xs text-gray-500">(optional - AI will detect)</span>
         </label>
         <select
           id="brand"
-          required
           value={formData.brand}
           onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
-          <option value="">Select a brand</option>
+          <option value="">Let AI detect from image</option>
           {LUXURY_BRANDS.map((brand) => (
             <option key={brand} value={brand}>
               {brand}
@@ -135,16 +174,15 @@ export default function AppraisalForm({ onSubmit, isLoading }: AppraisalFormProp
       {/* Category */}
       <div>
         <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
-          Category *
+          Category <span className="text-xs text-gray-500">(optional - AI will detect)</span>
         </label>
         <select
           id="category"
-          required
           value={formData.category}
           onChange={(e) => setFormData({ ...formData, category: e.target.value })}
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         >
-          <option value="">Select a category</option>
+          <option value="">Let AI detect from image</option>
           {ITEM_CATEGORIES.map((category) => (
             <option key={category} value={category}>
               {category}
@@ -171,17 +209,16 @@ export default function AppraisalForm({ onSubmit, isLoading }: AppraisalFormProp
       {/* Original Price */}
       <div>
         <label htmlFor="originalPrice" className="block text-sm font-medium text-gray-700 mb-2">
-          Original Retail Price * ($)
+          Original Retail Price <span className="text-xs text-gray-500">(optional - if known)</span>
         </label>
         <input
           type="number"
           id="originalPrice"
-          required
           min="0"
           step="0.01"
           value={formData.originalPrice || ''}
           onChange={(e) => setFormData({ ...formData, originalPrice: parseFloat(e.target.value) })}
-          placeholder="2500"
+          placeholder="2500 (leave empty if unknown)"
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
         />
       </div>
@@ -295,5 +332,6 @@ export default function AppraisalForm({ onSubmit, isLoading }: AppraisalFormProp
         {isLoading ? 'Calculating...' : 'Get AI Appraisal'}
       </button>
     </form>
+    </>
   );
 }
