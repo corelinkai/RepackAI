@@ -192,7 +192,7 @@ export default function AppraisalResultComponent({ result, onNewAppraisal }: App
         <div className="bg-white border border-gray-200 rounded-lg p-6">
           <h3 className="text-lg font-semibold mb-4">Price Factors</h3>
           <div className="space-y-3">
-            {(result.priceFactors || result.factors || []).map((factor, index) => (
+            {(result.priceFactors || result.factors || []).map((factor: any, index) => (
               <div
                 key={index}
                 className={`flex items-center justify-between p-3 rounded-lg ${getImpactColor(factor.impact)}`}
