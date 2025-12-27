@@ -7,6 +7,18 @@ export interface User {
   avatar?: string;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  image: string;
+  category: string;
+  stock: number;
+  rating: number;
+  reviews: number;
+}
+
 export type ItemCondition = 'new' | 'excellent' | 'good' | 'fair' | 'poor';
 export type DesignTrend = 'trending' | 'classic' | 'dated';
 export type DemandLevel = 'high' | 'medium' | 'low';
