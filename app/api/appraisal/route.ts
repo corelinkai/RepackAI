@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     const confidence = calculateConfidence(aiAnalysis, marketStats);
 
     // Prepare appraisal result
-    const appraisalResult = {
+    const appraisalResult: any = {
       brand: finalBrand,
       model: finalModel,
       category: finalCategory,
