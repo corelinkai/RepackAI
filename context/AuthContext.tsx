@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: '1',
       name: email.split('@')[0],
       email,
+      role: 'consumer',
       avatar: `https://ui-avatars.com/api/?name=${email.split('@')[0]}&background=0ea5e9&color=fff`,
     };
 
@@ -51,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       id: Date.now().toString(),
       name,
       email,
+      role: 'consumer',
       avatar: `https://ui-avatars.com/api/?name=${name}&background=0ea5e9&color=fff`,
     };
 
